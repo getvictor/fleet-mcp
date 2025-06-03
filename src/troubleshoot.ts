@@ -62,8 +62,9 @@ async function troubleshoot(): Promise<void> {
   
   // Check if the server is running
   console.log('\nChecking if the server is running...');
+  const port = process.env.PORT || '3000';
   try {
-    const response = await axios.get('http://localhost:3000/mcp', { timeout: 2000 });
+    const response = await axios.get(`http://localhost:${port}/mcp`, { timeout: 2000 });
     console.log('✅ Server is running');
     console.log(`   Server name: ${response.data.name}`);
     console.log(`   Server version: ${response.data.version}`);

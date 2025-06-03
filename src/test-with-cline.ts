@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as child_process from 'child_process';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 /**
  * Script to test the Fleet MCP server with Cline/Roo Code
@@ -13,8 +17,9 @@ async function testWithCline(): Promise<void> {
     
     // Check if the server is running
     console.log('Checking if the Fleet MCP server is running...');
+    const port = process.env.PORT || '3000';
     try {
-      const response = await fetch('http://localhost:3000/mcp');
+      const response = await fetch(`http://localhost:${port}/mcp`);
       if (response.ok) {
         console.log('✅ Fleet MCP server is running');
       } else {

@@ -3,7 +3,11 @@
     "fleet": {
       "url": "http://localhost:3000/mcp",
       "disabled": false,
-      "alwaysAllow": []
+      "alwaysAllow": [],
+      "headers": {
+        "Authorization": "Bearer your_mcp_auth_token_here"
+      }
     }
-  }
+  },
+  "_comment": "Change the port in the URL if you've configured a different PORT in your .env file"
 }

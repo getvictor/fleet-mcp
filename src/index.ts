@@ -15,6 +15,12 @@ config();
 const FLEET_SERVER_URL = process.env.FLEET_SERVER_URL || 'https://fleet.example.com/api';
 const FLEET_API_KEY = process.env.FLEET_API_KEY;
 
+// MCP Server authorization
+const MCP_AUTH_TOKEN = process.env.MCP_AUTH_TOKEN || 'default-mcp-auth-token';
+
+// Server configuration
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
 if (!FLEET_API_KEY) {
   console.error('FLEET_API_KEY environment variable is required');
   process.exit(1);
@@ -81,11 +87,40 @@ class FleetMcpServer {
   }
   
   /**
+   * Authorization middleware for MCP endpoints
+   */
+  private authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      res.status(401).json({ error: 'Authorization header required' });
+      return;
+    }
+    
+    const [type, token] = authHeader.split(' ');
+    
+    if (type !== 'Bearer' || !token) {
+      console.error('Invalid authorization header format');
+      res.status(401).json({ error: 'Invalid authorization header format. Use: Bearer <token>' });
+      return;
+    }
+    
+    if (token !== MCP_AUTH_TOKEN) {
+      console.error('Invalid authorization token');
+      res.status(401).json({ error: 'Invalid authorization token' });
+      return;
+    }
+    
+    next();
+  };
+  
+  /**
    * Set up Express routes
    */
   private setupRoutes(): void {
     // SSE endpoint for establishing the stream
-    this.app.get('/mcp', async (req, res) => {
+    this.app.get('/mcp', this.authMiddleware, async (req, res) => {
       console.log('Received GET request to /mcp (establishing SSE stream)');
       try {
         // Create a new SSE transport for the client
@@ -113,7 +148,7 @@ class FleetMcpServer {
     });
     
     // Messages endpoint for receiving client JSON-RPC requests
-    this.app.post('/mcp/messages', async (req, res) => {
+    this.app.post('/mcp/messages', this.authMiddleware, async (req, res) => {
       console.log('Received POST request to /mcp/messages');
       
       // Extract session ID from URL query parameter
@@ -356,6 +391,7 @@ class FleetMcpServer {
     return new Promise<void>((resolve) => {
       this.httpServer.listen(port, () => {
         console.log(`Fleet MCP server running on http://localhost:${port}/mcp`);
+        console.log(`Authorization required: Bearer token`);
         resolve();
       });
     });
@@ -364,4 +400,4 @@ class FleetMcpServer {
 
 // Create and start the server
 const server = new FleetMcpServer();
-server.start().catch(console.error);
+server.start(PORT).catch(console.error);

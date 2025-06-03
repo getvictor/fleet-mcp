@@ -42,11 +42,30 @@ This MCP server implements the Model Context Protocol to provide AI assistants w
    ```bash
    cp .env.example .env
    ```
-   And edit it to add your Fleet API credentials:
+   And edit it to add your Fleet API credentials and MCP authentication token:
    ```
    FLEET_SERVER_URL=https://your-fleet-instance.com/api
    FLEET_API_KEY=your_api_key_here
+   MCP_AUTH_TOKEN=your_mcp_auth_token_here
    ```
+
+4. Configure MCP Authentication:
+   The MCP server requires Bearer token authentication for security. Set the `MCP_AUTH_TOKEN` environment variable in your `.env` file to a secure token of your choice. This token will be required by clients connecting to the MCP server.
+
+   **Generating a secure token:**
+   ```bash
+   # Generate a secure random token (macOS/Linux)
+   openssl rand -hex 32
+   
+   # Or using Node.js
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   **Security recommendations:**
+   - Use a strong, randomly generated token (at least 32 characters)
+   - Rotate the token periodically
+   - Never commit the token to version control
+   - Keep the `.env` file secure and restrict access
 
 5. Test your Fleet API connection:
    ```bash
@@ -78,7 +97,11 @@ npm start
 ./start-server.sh
 ```
 
-The server will run on http://localhost:3000/mcp by default.
+The server will run on http://localhost:3000/mcp by default. You can change the port by setting the `PORT` environment variable in your `.env` file:
+
+```
+PORT=8080
+```
 
 ### Configuring with Cline
 
@@ -98,11 +121,16 @@ Alternatively, you can manually add the following configuration to your MCP sett
     "fleet": {
       "url": "http://localhost:3000/mcp",
       "disabled": false,
-      "alwaysAllow": []
+      "alwaysAllow": [],
+      "headers": {
+        "Authorization": "Bearer your_mcp_auth_token_here"
+      }
     }
   }
 }
 ```
+
+**Important:** Replace `your_mcp_auth_token_here` with the actual token you set in your `.env` file as `MCP_AUTH_TOKEN`.
 
 The settings files are located at:
 - VS Code: `/Users/username/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json`

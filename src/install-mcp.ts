@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 /**
  * Script to install the Fleet MCP server to Cline configuration
@@ -42,12 +46,26 @@ async function installMcpServer(): Promise<void> {
       'claude_desktop_config.json'
     );
     
+    // Get MCP auth token from environment
+    const mcpAuthToken = process.env.MCP_AUTH_TOKEN;
+    if (!mcpAuthToken) {
+      console.error('Error: MCP_AUTH_TOKEN not found in environment variables.');
+      console.error('Please run "npm run update-credentials" first to set up your credentials.');
+      process.exit(1);
+    }
+    
+    // Get port from environment
+    const port = process.env.PORT || '3000';
+    
     // Fleet MCP server configuration
     const fleetMcpConfig = {
       fleet: {
-        url: 'http://localhost:3000/mcp',
+        url: `http://localhost:${port}/mcp`,
         disabled: false,
-        alwaysAllow: []
+        alwaysAllow: [],
+        headers: {
+          Authorization: `Bearer ${mcpAuthToken}`
+        }
       }
     };
     
